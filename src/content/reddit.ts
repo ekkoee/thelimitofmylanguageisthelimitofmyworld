@@ -22,6 +22,11 @@ export const redditAdapter: SiteAdapter = {
 
     const addLeaf = (e: Element) => {
       const html = e as HTMLElement;
+      // NEVER collect our own output. The title translation block is given
+      // slot="title" (so it projects next to the title) which makes it match the
+      // [slot="title"] selector — without this guard it would be re-translated
+      // forever, stacking duplicate titles.
+      if (html.classList.contains('ibt-block') || html.closest('.ibt-block')) return;
       if (seen.has(html) || isProcessed(html)) return;
       // de-dupe nesting: skip if an already-collected block contains this one
       // (handles <li><p>…</p></li> → keep the <li>, drop the inner <p>)

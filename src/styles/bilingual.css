@@ -109,6 +109,15 @@
 :root[data-ibt-view="zh"] .ibt-orig-src { display: none !important; }
 :root[data-ibt-view="zh"] .ibt-yt-en { display: none !important; }
 
+/* X tweets interleave our blocks between the tweet's own text NODES, which CSS
+   can't target to hide. For "只顯示中文", collapse the tweet's own text (font/
+   line-height → 0) while restoring our translation lines to a real size. */
+:root[data-ibt-view="zh"] [data-testid="tweetText"] { font-size: 0 !important; line-height: 0 !important; }
+:root[data-ibt-view="zh"] [data-testid="tweetText"] .ibt-block {
+  font-size: calc(1rem * var(--ibt-font-scale)) !important;
+  line-height: 1.5 !important;
+}
+
 /* Movie mode hides YouTube's native caption while our overlay is showing
    (i.e. in every view except 原文-only). */
 :root[data-ibt-yt="on"]:not([data-ibt-view="orig"]) .ytp-caption-window-container { visibility: hidden !important; }
