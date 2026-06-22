@@ -204,6 +204,10 @@ export class UniversalTranslator {
     const block = renderTranslationAfter(node, text, { sig });
     if (block) {
       block.classList.add('ibt-uni');
+      // Match the translation's size to the source element, so a big <h1> heading's
+      // translation reads as a heading, not tiny body text (the block is a sibling, so
+      // it can't inherit the heading's font-size on its own).
+      block.style.setProperty('--ibt-src-fs', getComputedStyle(node).fontSize);
       this.blocks.add(block);
       this.blockBySource.set(node, block);
     }

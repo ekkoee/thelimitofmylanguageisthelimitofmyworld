@@ -23,6 +23,9 @@
   grid-column: 1 / -1;
   box-sizing: border-box;
   contain: layout;
+  /* match the source element's size (set per-block in universal.ts) so a heading's
+     translation reads as a heading; falls back to the default body size. */
+  font-size: calc(var(--ibt-src-fs, 0.98em) * var(--ibt-font-scale));
 }
 
 /* Left marker bar — user-configurable in options (style + color + hide). */

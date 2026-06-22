@@ -43,11 +43,13 @@ const HARD_SKIP = new Set([
   'EMBED', 'MATH', 'BUTTON',
 ]);
 
-// Areas/roles that are interactive UI chrome, not readable prose.
+// Areas/roles that are non-content chrome (nav bars, sidebars, toolbars, banners),
+// not the main readable prose. Landmark roles + their HTML equivalents.
 const SKIP_CHROME = [
-  'nav', 'time', 'label',
-  '[role="button"]', '[role="menuitem"]', '[role="tab"]', '[role="switch"]',
-  '[role="navigation"]', '[role="banner"]', '[role="contentinfo"]',
+  'nav', 'aside', 'time', 'label',
+  '[role="button"]', '[role="menuitem"]', '[role="menu"]', '[role="menubar"]',
+  '[role="tab"]', '[role="tablist"]', '[role="switch"]', '[role="toolbar"]',
+  '[role="navigation"]', '[role="banner"]', '[role="contentinfo"]', '[role="complementary"]',
   '[translate="no"]', '.notranslate', '[data-testid="User-Name"]',
 ].join(',');
 
@@ -157,15 +159,21 @@ function linkDensity(el: HTMLElement): number {
   return linked / total;
 }
 
-// Keep real prose, drop UI chrome. CJK gets a shorter minimum length (a 2-character
-// Chinese phrase is meaningful).
+// Keep real prose, drop UI chrome. The content-vs-chrome heuristics, in order:
+//   1. landmark/role chrome (nav, aside, toolbar, buttons, …)
+//   2. short text INSIDE a link → a name / tag / nav item (post & comment BODIES are
+//      not wrapped in links, so this spares them while killing author names that sit
+//      in an <a>/[role=link] — where the leaf's own link-density is 0)
+//   3. link-density → text that mostly IS links (nav rows, contact lists)
+//   4. minimum length (CJK gets a shorter bar — a 2-char Chinese phrase is meaningful)
 function passesGate(el: HTMLElement, text: string): boolean {
   const t = text.trim();
   if (!hasTranslatableText(t)) return false;                // needs a letter, len >= 2
-  if (el.closest(SKIP_CHROME)) return false;                // buttons / nav / names
+  if (el.closest(SKIP_CHROME)) return false;                // nav / sidebar / buttons
+  if (t.length < 30 && el.closest('a,[role="link"]')) return false; // name / nav link / tag
   const density = linkDensity(el);
   if (density > 0.9) return false;                          // near-fully-linked card / promo, any length
-  if (t.length < 40 && density > 0.5) return false;         // short + mostly link → author/menu item
+  if (t.length < 40 && density > 0.5) return false;         // short + mostly link → menu / author
   const hasCJK = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(t);
   if (!hasCJK && t.length < 3) return false;                // stray single short token
   return true;
