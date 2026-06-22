@@ -43,10 +43,18 @@ function showError(block: HTMLElement, message: string, retry: () => void): void
   block.appendChild(btn);
 }
 
-/** Insert a translation block right AFTER `anchor` (element or text node). */
-export function renderTranslationAfter(anchor: Node, text: string): HTMLElement | null {
+/** Insert a translation block right AFTER `anchor` (element or text node).
+ *  `opts.sig` stamps a content fingerprint on the block (data-ibt-sig) so a re-scan
+ *  can detect "this exact translation already sits here" even after the framework
+ *  swaps the source node — see universal.ts. Every block is also tagged
+ *  data-ibt-out so the universal MutationObserver ignores its own insertions. */
+export function renderTranslationAfter(
+  anchor: Node, text: string, opts?: { sig?: string },
+): HTMLElement | null {
   if (!hasTranslatableText(text)) return null;
   const block = el('div', 'ibt-block ibt-loading');
+  block.dataset.ibtOut = '1';
+  if (opts?.sig) block.dataset.ibtSig = opts.sig;
   block.appendChild(el('span', 'ibt-loading-dot', '翻譯中…'));
   if (anchor.parentNode) anchor.parentNode.insertBefore(block, anchor.nextSibling);
   // Tag the original element so "Chinese-only" view can hide it via CSS — but

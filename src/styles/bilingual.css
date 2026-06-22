@@ -13,6 +13,18 @@
   white-space: pre-wrap;
 }
 
+/* "Translate any page" (Alt+A) blocks only. The source may live inside the host's
+   flex/grid container (Facebook); force our translation onto its own full-width line
+   so it never becomes a stray flex/grid track, and contain reflow on long feeds. */
+.ibt-block.ibt-uni {
+  display: block;
+  width: 100%;
+  flex-basis: 100%;
+  grid-column: 1 / -1;
+  box-sizing: border-box;
+  contain: layout;
+}
+
 /* Left marker bar — user-configurable in options (style + color + hide). */
 :root[data-ibt-bar="thick"] .ibt-block { border-left-width: 6px; }
 :root[data-ibt-bar="dashed"] .ibt-block { border-left-style: dashed; }
@@ -35,8 +47,9 @@
 /* When showing original too, allow flipping order (translation above original) */
 :root[data-ibt-layout="transTop"] .ibt-pair { flex-direction: column-reverse; }
 
-/* global toggle */
-:root[data-ibt-enabled="false"] .ibt-block,
+/* global toggle — hide every translation when the extension is disabled.
+   (display:none !important is needed to override .ibt-block / .ibt-uni's display.) */
+:root[data-ibt-enabled="false"] .ibt-block { display: none !important; }
 
 /* loading / error states */
 .ibt-block.ibt-loading { opacity: 0.7; }
