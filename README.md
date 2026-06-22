@@ -59,6 +59,7 @@ npm run build      # 產生 dist/
 | 引擎 | 免費? | 需要 key? | 說明 |
 |---|---|---|---|
 | **Google(預設)** | ✅ 完全免費 | ❌ 不用 | 免費端點,回傳本身就逐句對齊。少數情況可能被限流。 |
+| **Microsoft(免費後備)** | ✅ 完全免費 | ❌ 不用 | Edge 免金鑰端點。Google 被限流(403/429)時自動切換,也可手動選用。 |
 | Gemini | 有免費額度 | 需免費 key | 到 aistudio.google.com 拿免費 key;預設 `gemini-2.5-flash-lite`。 |
 | OpenAI | 付費 | 需 key | 品質高、要付費。 |
 | Ollama | ✅ 免費 | ❌ 不用 | 本地模型,需自行安裝 Ollama 並下載模型。 |
@@ -106,7 +107,8 @@ src/
 │  ├─ index.ts                    站點偵測 + 啟動對應 adapter;Alt+A 顯示/隱藏切換
 │  ├─ engine.ts                   收集節點、可見才翻、插入雙語區塊
 │  ├─ twitter.ts / reddit.ts      各站 adapter(要翻哪些節點)
-│  ├─ universal.ts                整頁翻譯器(掃描 + 可見才翻 + 動態內容)
+│  ├─ blocks.ts                   通用版面偵測(getComputedStyle 判區塊/行內 + 內容/雜訊過濾)
+│  ├─ universal.ts                整頁翻譯器(通用偵測 + 可見才翻 + SPA 去重)
 │  ├─ universal-inject.ts         由 background 在使用者按 Alt+A 時注入當前分頁
 │  ├─ youtube.ts                  攔截字幕 → 合併句子 → 電影模式雙語字幕
 │  ├─ yt-main.ts                  MAIN world 橋接,攔截 YouTube timedtext 回應
@@ -117,7 +119,7 @@ src/
 │  ├─ segmentation.ts             英文斷句(逐句對齊用)
 │  ├─ cache.ts                    記憶體 + chrome.storage.local 雙層快取
 │  └─ queue.ts                    併發上限佇列(控成本／速率)
-├─ providers/                     翻譯引擎抽象:base 介面 + google / openai / gemini / ollama
+├─ providers/                     翻譯引擎抽象:base 介面 + google / microsoft / openai / gemini / ollama
 ├─ ui/popup, ui/options           快速控制 + 完整設定(含樣式即時預覽)
 ├─ styles/bilingual.css           注入頁面的雙語樣式(深色友善、多種樣式)
 └─ utils/                         site 偵測、DOM、MutationObserver / URL 變化

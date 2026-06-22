@@ -2,6 +2,21 @@
 
 本專案版本號遵循 [語意化版本](https://semver.org/lang/zh-TW/);格式參考 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)。
 
+## [1.1.2] - 2026-06-22
+
+### 新增 Added
+- **第二個免費引擎:Microsoft 翻譯(免 API 金鑰)**:作為 Google 免費端點的後備。當 Google 免費端點偶爾被限流(403/429)時,背景 service worker 會自動改用 Microsoft 端點再試一次,讓「永遠免費、免金鑰」更穩。設定頁與 popup 的「翻譯引擎」可直接選用,與 Google 並列、同樣免 key。
+- **「翻譯任何網頁(Alt+A)」改用通用版面偵測**:不再只認 `<p>/<li>/<h*>` 等語意標籤,改以 `getComputedStyle` 判斷區塊/行內、找出真正含文字的最低區塊。現在能在以 `<div>`/`<span>` 排版的現代網站(Facebook、Mastodon/Truth Social 等)正確抓到貼文內文,而不再只是把整段倒在最底或抓錯東西。
+- **內容 vs 介面雜訊的判斷**:以「地標區域(nav / aside / 側欄)＋ 連結內短文字(人名 / 導覽)＋ 連結密度」過濾,避免翻到作者名、追蹤鈕、導覽列;標題的譯文會比照原文字級顯示。
+
+### 變更 Changed
+- 預設引擎仍為 Google,使用者無感;Microsoft 僅作為自動後備或手動選用。
+
+### 修正 Fixed
+- 整頁翻譯在 React / SPA 網站(會重繪、虛擬化)上重複插入譯文區塊的問題:改用「來源節點對應 ＋ 相鄰比對 ＋ 內容指紋」的去重,並讓 MutationObserver 只重掃變動的子樹(改善長列表效能)。
+- 整頁翻譯誤翻隱藏元素(`visibility:hidden`、0 尺寸的無障礙 / 佔位節點),導致頁面上方堆出一排雜訊區塊的問題。
+- 關閉擴充功能時,注入的譯文未被隱藏的 CSS 問題(`data-ibt-enabled` 規則因多餘逗號而失效)。
+
 ## [1.1.1] - 2026-06-22
 
 ### 新增 Added
