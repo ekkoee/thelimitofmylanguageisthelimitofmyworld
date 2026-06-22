@@ -64,14 +64,29 @@ export class UniversalTranslator {
     this.rescan = setTimeout(() => this.scan(), 350) as unknown as number;
   }
 
+  private firstScanReported = false;
+
   private scan(): void {
     if (!this.active || !this.settings.enabled) return;
     const nodes = document.querySelectorAll<HTMLElement>(BLOCK_SELECTOR);
     const candidates: HTMLElement[] = [];
-    nodes.forEach((node) => { if (this.eligible(node)) candidates.push(node); });
+    let skippedAsTarget = 0;
+    nodes.forEach((node) => {
+      if (!this.eligible(node)) return;
+      // (task 4) This path only: skip text that's ALREADY the target language
+      // (e.g. Chinese page) to avoid pointless 中文→中文 double lines. Deliberately
+      // NOT applied to X/Reddit's per-node scan (slower, and source is ~never zh).
+      if (this.looksAlreadyTarget(node)) { skippedAsTarget++; return; }
+      candidates.push(node);
+    });
 
     // keep only innermost blocks (drop any that contain another candidate)
     const leaves = candidates.filter((c) => !candidates.some((o) => o !== c && c.contains(o)));
+
+    if (!this.firstScanReported) {
+      this.firstScanReported = true;
+      if (!leaves.length && skippedAsTarget > 0) toast('這頁看起來已經是中文，不需要翻譯');
+    }
 
     for (const node of leaves) {
       node.setAttribute(UNI_ATTR, '1');
@@ -88,6 +103,20 @@ export class UniversalTranslator {
     if (!text || text.length < 2 || !hasTranslatableText(text)) return false;
     if (!node.getClientRects().length) return false; // hidden / not rendered
     return true;
+  }
+
+  // True when the text is already in the target language (only meaningful for a
+  // Chinese target). Han-dominant AND no Japanese kana / Korean hangul → it's
+  // Chinese, so translating it would just stack 中文 on 中文.
+  private looksAlreadyTarget(node: HTMLElement): boolean {
+    if (!(this.settings.targetLangCode || '').toLowerCase().startsWith('zh')) return false;
+    const text = (node.innerText || '').trim();
+    const han = (text.match(/\p{Script=Han}/gu) || []).length;
+    if (!han) return false;
+    if (/[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(text)) return false;
+    const letters = (text.match(/\p{L}/gu) || []).length || 1;
+    const latin = (text.match(/[A-Za-z]/g) || []).length;
+    return han / letters >= 0.5 && latin / letters < 0.5;
   }
 
   private ensureIO(): IntersectionObserver {
@@ -113,7 +142,7 @@ export class UniversalTranslator {
 // --- tiny transient toast (bottom-center) ---
 let toastEl: HTMLDivElement | null = null;
 let toastTimer: number | undefined;
-function toast(msg: string): void {
+export function toast(msg: string): void {
   if (!toastEl) { toastEl = document.createElement('div'); toastEl.className = 'ibt-toast'; }
   toastEl.textContent = msg;
   if (!toastEl.isConnected) document.documentElement.appendChild(toastEl);

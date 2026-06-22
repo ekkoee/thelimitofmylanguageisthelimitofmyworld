@@ -18,6 +18,29 @@ export function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
+// --- 3-state display view (Alt+A cycles; popup mirrors). Pure CSS, no re-translate.
+//  both → original + Chinese   |   orig → original only   |   zh → Chinese only
+export type ViewMode = 'both' | 'zh' | 'orig';
+const VIEW_ATTR = 'data-ibt-view';
+const VIEW_NEXT: Record<ViewMode, ViewMode> = { both: 'orig', orig: 'zh', zh: 'both' };
+export const VIEW_LABEL: Record<ViewMode, string> = {
+  both: '原文 + 中文', orig: '只顯示原文', zh: '只顯示中文',
+};
+
+export function getView(): ViewMode {
+  const v = document.documentElement.getAttribute(VIEW_ATTR);
+  return v === 'zh' || v === 'orig' ? v : 'both';
+}
+export function setView(v: ViewMode): void {
+  document.documentElement.setAttribute(VIEW_ATTR, v);
+}
+/** Advance to the next view in the cycle and return it. */
+export function cycleView(): ViewMode {
+  const next = VIEW_NEXT[getView()];
+  setView(next);
+  return next;
+}
+
 let rootApplied = false;
 /** Mirror visual settings onto <html> so CSS handles all toggles without re-translation. */
 export function applyRootState(s: {
@@ -25,6 +48,8 @@ export function applyRootState(s: {
   targetLangCode?: string; transStyle?: string; transColor?: string;
 }): void {
   const r = document.documentElement;
+  // Default display is bilingual; never clobber a view the user has cycled to.
+  if (!r.hasAttribute(VIEW_ATTR)) r.setAttribute(VIEW_ATTR, 'both');
   r.setAttribute('data-ibt-enabled', String(s.enabled));
   r.setAttribute('data-ibt-show-original', String(s.showOriginal));
   r.setAttribute('data-ibt-layout', s.layout);

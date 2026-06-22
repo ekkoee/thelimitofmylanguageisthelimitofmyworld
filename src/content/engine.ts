@@ -44,6 +44,17 @@ export function renderTranslationAfter(anchor: Node, text: string): HTMLElement 
   const block = el('div', 'ibt-block ibt-loading');
   block.appendChild(el('span', 'ibt-loading-dot', '翻譯中…'));
   if (anchor.parentNode) anchor.parentNode.insertBefore(block, anchor.nextSibling);
+  // Tag the original element so "Chinese-only" view can hide it via CSS — but
+  // ONLY when our block is a true sibling of a self-contained original
+  // (Reddit / universal / single-line tweets & bios). Never tag a <br>, nor any
+  // container that already holds our blocks (e.g. a multi-line tweet's text box,
+  // whose interleaved originals are text nodes that CSS can't hide anyway).
+  if (anchor.nodeType === 1) {
+    const elAnchor = anchor as HTMLElement;
+    if (elAnchor.tagName !== 'BR' && !elAnchor.querySelector('.ibt-block')) {
+      elAnchor.classList.add('ibt-orig-src');
+    }
+  }
 
   const run = async () => {
     block.className = 'ibt-block ibt-loading';

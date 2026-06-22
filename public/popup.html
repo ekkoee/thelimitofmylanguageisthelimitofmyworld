@@ -17,7 +17,7 @@
 
   <div class="cta">
     <button id="translatePage">🌐 翻譯這個網頁</button>
-    <div id="ctaHint" class="cta-hint">也可用快速鍵 Alt+A（X／Reddit／YouTube 為顯示／隱藏）</div>
+    <div id="ctaHint" class="cta-hint">也可按 Alt+A 循環切換：原文 → 只中文 → 原文+中文</div>
   </div>
 
   <section>
@@ -37,10 +37,11 @@
     </div>
 
     <div class="row">
-      <label for="showOriginal">譯文呈現</label>
-      <select id="showOriginal">
-        <option value="trans">只顯示中文（推薦）</option>
+      <label for="viewMode">譯文呈現</label>
+      <select id="viewMode">
         <option value="both">原文＋中文對照</option>
+        <option value="zh">只顯示中文</option>
+        <option value="orig">只顯示原文（關閉譯文）</option>
       </select>
     </div>
 

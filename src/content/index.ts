@@ -1,6 +1,6 @@
 import { detectSite } from '../utils/site';
 import { loadSettings, onSettingsChanged } from '../core/storage';
-import { applyRootState } from '../utils/dom';
+import { applyRootState, cycleView, VIEW_LABEL } from '../utils/dom';
 import { observeMutations, onUrlChange } from '../utils/observer';
 import { Engine } from './engine';
 import { scanTwitter } from './twitter';
@@ -19,14 +19,11 @@ import { Settings } from '../core/types';
   let settings = await loadSettings();
   applyRoot(settings);
 
-  // Alt+A (or the popup button) on these auto-sites toggles the translations
-  // on/off so the user can fall back to the original text.
+  // Alt+A (or the popup button) on these auto-sites cycles the 3-state display:
+  // 原文 + 中文 → 只顯示原文 → 只顯示中文 → … (pure CSS, no re-translation).
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg?.type === 'ibt-toggle-visibility') {
-      const root = document.documentElement;
-      const paused = root.getAttribute('data-ibt-paused') === '1';
-      if (paused) { root.removeAttribute('data-ibt-paused'); flash('已顯示翻譯'); }
-      else { root.setAttribute('data-ibt-paused', '1'); flash('已隱藏翻譯（再按一次還原）'); }
+      flash(VIEW_LABEL[cycleView()]);
     }
   });
 

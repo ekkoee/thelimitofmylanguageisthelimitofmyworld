@@ -90,12 +90,28 @@
   white-space: pre-wrap;
 }
 
-/* Movie mode hides YouTube's native caption (only while our own is active) */
-:root[data-ibt-yt="on"]:not([data-ibt-paused="1"]) .ytp-caption-window-container { visibility: hidden !important; }
+/* ============================================================
+   3-state display, cycled by Alt+A and mirrored in the popup. All pure CSS so
+   switching never re-translates:
+     data-ibt-view="both"  原文 + 中文  (default)
+     data-ibt-view="orig"  只顯示原文   (hide our translations)
+     data-ibt-view="zh"    只顯示中文   (hide the original where targetable) */
 
-/* Alt+A on auto-sites: hide our translations, restore original */
-:root[data-ibt-paused="1"] .ibt-block,
-:root[data-ibt-paused="1"] .ibt-yt-overlay { display: none !important; }
+/* orig: hide every translation we added → only the page's own original text */
+:root[data-ibt-view="orig"] .ibt-block,
+:root[data-ibt-view="orig"] .ibt-yt-overlay,
+:root[data-ibt-view="orig"] .ibt-yt-line { display: none !important; }
+
+/* zh: hide the original. `.ibt-orig-src` is the source element our block sits
+   beside (Reddit / universal / single-line tweets); `.ibt-yt-en` is the movie-mode
+   English line. (Interleaved multi-line tweets keep the original — text nodes
+   can't be CSS-hidden — so they gracefully stay bilingual.) */
+:root[data-ibt-view="zh"] .ibt-orig-src { display: none !important; }
+:root[data-ibt-view="zh"] .ibt-yt-en { display: none !important; }
+
+/* Movie mode hides YouTube's native caption while our overlay is showing
+   (i.e. in every view except 原文-only). */
+:root[data-ibt-yt="on"]:not([data-ibt-view="orig"]) .ytp-caption-window-container { visibility: hidden !important; }
 
 :root[data-ibt-enabled="false"] .ibt-yt-overlay,
 :root[data-ibt-enabled="false"] .ibt-yt-line { display: none !important; }

@@ -19,9 +19,35 @@ async function init() {
     });
   });
 
-  const showOrig = document.getElementById('showOriginal') as HTMLSelectElement;
-  showOrig.value = s.showOriginal ? 'both' : 'trans';
-  showOrig.addEventListener('change', () => saveSettings({ showOriginal: showOrig.value === 'both' }));
+  // 譯文呈現 — mirrors the page's CURRENT 3-state view and sets it on change.
+  // Read/write <html data-ibt-view> on the active tab so the popup always shows
+  // the real state (and stays in sync after Alt+A cycling).
+  const viewMode = $<HTMLSelectElement>('viewMode');
+  const activeTabId = async (): Promise<number | undefined> => {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    return tab?.id;
+  };
+  const tabId = await activeTabId();
+  if (tabId != null) {
+    try {
+      const [res] = await chrome.scripting.executeScript({
+        target: { tabId },
+        func: () => document.documentElement.getAttribute('data-ibt-view') || 'both',
+      });
+      if (res?.result) viewMode.value = String(res.result);
+    } catch { /* page not scriptable (chrome://, store) — keep default */ }
+  }
+  viewMode.addEventListener('change', async () => {
+    const id = await activeTabId();
+    if (id == null) return;
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: id },
+        func: (v: string) => document.documentElement.setAttribute('data-ibt-view', v),
+        args: [viewMode.value],
+      });
+    } catch { /* not scriptable */ }
+  });
 
   // language: keep the free-engine code and the LLM-prompt name in sync
   const lang = $<HTMLSelectElement>('lang');
