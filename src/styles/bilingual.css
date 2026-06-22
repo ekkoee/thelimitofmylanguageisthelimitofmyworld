@@ -23,6 +23,10 @@
 
 .ibt-trans { color: var(--ibt-trans-color, inherit); }
 
+/* The title's translation block is projected into the title slot — give it a
+   touch more size/weight so it reads like the headline it translates. */
+.ibt-block[slot="title"] .ibt-trans { font-size: 1.25em; font-weight: 600; }
+
 /* When showing original too, allow flipping order (translation above original) */
 :root[data-ibt-layout="transTop"] .ibt-pair { flex-direction: column-reverse; }
 

@@ -17,8 +17,11 @@ import { Settings } from '../core/types';
 // get a separate prose pass scoped to the article reader / primary column.
 
 const SPLIT = 'data-ibt-split';
-const ARTICLE_LEAF = 'h1,h2,h3,h4,p,li,blockquote';
-const ARTICLE_SKIP = 'script,style,noscript,nav,aside,button,textarea,[contenteditable],[data-testid="tweetText"],.ibt-block';
+// X Articles render paragraphs as <div> (not <p>), so we include div and rely on
+// innermost-leaf + skip filtering. Skips cover UI chrome, links, the engagement
+// bar, timestamps, comments (tweetText) and our own output.
+const ARTICLE_LEAF = 'h1,h2,h3,h4,p,li,blockquote,div';
+const ARTICLE_SKIP = 'script,style,noscript,nav,aside,header,button,textarea,a,time,[role="group"],[contenteditable],[data-testid="tweetText"],.ibt-block';
 
 interface Line { anchor: Node; text: string }
 
@@ -87,14 +90,19 @@ export function scanTwitter(s: Settings): void {
     }
   }
 
-  // 2) X Articles (long-form) — only when a reader is actually present.
-  if (queryFirst(SELECTORS.x.article).length) {
-    const col = (queryFirst(SELECTORS.x.primaryColumn)[0] as HTMLElement)
-      || (queryFirst(SELECTORS.x.article)[0] as HTMLElement);
-    for (const leaf of collectArticleLeaves(col)) {
-      markProcessed(leaf);
-      const text = leaf.innerText?.trim() ?? '';
-      if (text) renderTranslationAfter(leaf, text);
+  // 2) X Articles (long-form) — title + body live OUTSIDE tweetText.
+  const scope = findArticleScope();
+  if (scope) {
+    const leaves = collectArticleLeaves(scope);
+    // Only act on a REAL article: needs a couple of substantial prose blocks.
+    // Guards against translating UI on ordinary pages (X has nav <h1>s too).
+    const substantial = leaves.filter((e) => (e.innerText || '').trim().length >= 40);
+    if (substantial.length >= 2) {
+      for (const leaf of leaves) {
+        markProcessed(leaf);
+        const text = leaf.innerText?.trim() ?? '';
+        if (text) renderTranslationAfter(leaf, text);
+      }
     }
   }
 
@@ -106,6 +114,23 @@ export function scanTwitter(s: Settings): void {
     const text = b.innerText?.trim() ?? '';
     if (text) renderTranslationAfter(b, text);
   }
+}
+
+// Find the X Article content region, if this page is one. We don't rely on a
+// specific (and unstable) testid: an Article shows a big <h1> title that normal
+// tweets never have, so we locate that title and scope to the <article> it sits
+// in. Explicit reader testids are tried first as a fast path.
+function findArticleScope(): HTMLElement | null {
+  const reader = queryFirst(SELECTORS.x.article)[0] as HTMLElement | undefined;
+  if (reader) return reader;
+  const col = (queryFirst(SELECTORS.x.primaryColumn)[0] as HTMLElement) || document.body;
+  // A real article title is long; X's nav/page <h1>s ("Post", "Home") are short.
+  const h1 = Array.from(col.querySelectorAll<HTMLElement>('h1')).find(
+    (h) => !h.closest('[data-testid="tweetText"]') && !h.closest('.ibt-block') && (h.innerText || '').trim().length >= 12,
+  );
+  // Require the title to live inside an <article> (the post container). If not,
+  // skip rather than risk scanning page chrome.
+  return h1 ? (h1.closest('article') as HTMLElement | null) : null;
 }
 
 // Innermost prose blocks within an article region (title + paragraphs + bullets),
