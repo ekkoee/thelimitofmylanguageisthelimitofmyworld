@@ -64,20 +64,33 @@ export function collectUnits(root: HTMLElement): Unit[] {
   // Per-scan caches: getComputedStyle and innerText are the expensive calls; cache
   // them so a subtree is styled/read once. Scoped to this scan (Maps GC'd on return)
   // so a node that toggles display/text between scans isn't stuck stale.
-  const dcache = new Map<Element, DisplayKind>();
+  const scache = new Map<Element, { kind: DisplayKind; visible: boolean }>();
   const itext = new Map<Element, string>();
 
-  const display = (el: Element): DisplayKind => {
-    const hit = dcache.get(el);
+  const styleOf = (el: Element): { kind: DisplayKind; visible: boolean } => {
+    const hit = scache.get(el);
     if (hit) return hit;
+    const cs = getComputedStyle(el);
+    const d = cs.display;
     let kind: DisplayKind;
-    const d = getComputedStyle(el).display;
     if (d === 'none') kind = 'none';
     else if (d === 'contents') kind = 'contents';
     else if (d.startsWith('inline')) kind = PHRASING.has(el.tagName) ? 'inline' : 'block';
     else kind = 'block';
-    dcache.set(el, kind);
-    return kind;
+    const s = { kind, visible: cs.visibility !== 'hidden' && cs.visibility !== 'collapse' };
+    scache.set(el, s);
+    return s;
+  };
+  const display = (el: Element): DisplayKind => styleOf(el).kind;
+
+  // An element actually paints a box of meaningful size. Filters display:none-detached
+  // (no rects), zero-size measurement nodes, and visibility:hidden — the hidden a11y /
+  // placeholder elements SPAs like Facebook scatter everywhere. Translating those would
+  // stack a column of junk blocks even though the source itself is invisible.
+  const rendered = (el: Element): boolean => {
+    if (!styleOf(el).visible) return false;
+    const rects = (el as HTMLElement).getClientRects();
+    return rects.length > 0 && rects[0].width >= 1 && rects[0].height >= 1;
   };
 
   const textOf = (el: Element): string => {
@@ -128,7 +141,7 @@ export function collectUnits(root: HTMLElement): Unit[] {
       for (const ch of Array.from(el.children)) visit(ch);     // container → go deeper
     } else {
       const text = textOf(el);                                  // leaf block → one unit
-      if (text && passesGate(el as HTMLElement, text)) units.push({ element: el as HTMLElement, text });
+      if (text && rendered(el) && passesGate(el as HTMLElement, text)) units.push({ element: el as HTMLElement, text });
     }
   };
 
