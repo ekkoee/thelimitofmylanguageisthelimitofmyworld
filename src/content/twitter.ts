@@ -139,10 +139,15 @@ function findArticleScope(): HTMLElement | null {
 // Innermost prose blocks within an article region (title + paragraphs + bullets),
 // skipping tweets and UI chrome. De-dupes nesting like the universal scanner.
 function collectArticleLeaves(root: HTMLElement): HTMLElement[] {
-  const all = Array.from(root.querySelectorAll<HTMLElement>(ARTICLE_LEAF)).filter((e) => {
+  const matches = Array.from(root.querySelectorAll<HTMLElement>(ARTICLE_LEAF));
+  // STRUCTURAL leaves: contain no other matched element. Computed against ALL
+  // matches (including already-processed paragraphs and our own inserted divs),
+  // so once a paragraph is processed we don't "climb" to its now-childless
+  // ancestor and re-translate it — that was an infinite tree-walking loop.
+  const leaves = matches.filter((c) => !matches.some((o) => o !== c && c.contains(o)));
+  return leaves.filter((e) => {
     if (isProcessed(e) || e.closest(ARTICLE_SKIP)) return false;
     const t = e.innerText?.trim() ?? '';
     return !!t && t.length >= 2;
   });
-  return all.filter((c) => !all.some((o) => o !== c && c.contains(o)));
 }
