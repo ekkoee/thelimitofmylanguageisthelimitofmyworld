@@ -21,7 +21,10 @@ const SPLIT = 'data-ibt-split';
 // innermost-leaf + skip filtering. Skips cover UI chrome, links, the engagement
 // bar, timestamps, comments (tweetText) and our own output.
 const ARTICLE_LEAF = 'h1,h2,h3,h4,p,li,blockquote,div';
-const ARTICLE_SKIP = 'script,style,noscript,nav,aside,header,button,textarea,a,time,[role="group"],[contenteditable],[data-testid="tweetText"],.ibt-block';
+// NOTE: skip only TRULY editable areas. X Articles render in a read-only Draft.js
+// editor with contenteditable="false" — a bare [contenteditable] selector would
+// (wrongly) match that and skip the whole article body.
+const ARTICLE_SKIP = 'script,style,noscript,nav,aside,header,button,textarea,a,time,[role="group"],[contenteditable="true"],[data-testid="tweetText"],.ibt-block';
 
 interface Line { anchor: Node; text: string }
 

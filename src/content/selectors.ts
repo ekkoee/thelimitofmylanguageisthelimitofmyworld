@@ -7,12 +7,12 @@ export const SELECTORS = {
     // tweet body, replies, quoted tweets all share this testid
     text: ['[data-testid="tweetText"]'],
     bio: ['[data-testid="UserDescription"]'],
-    // X Articles (long-form). The rich-text body container; title + paragraphs
-    // live OUTSIDE tweetText, so they need their own pass. Fallbacks in order.
+    // X Articles (long-form). ReadView wraps title + body; RichTextView/the
+    // Draft.js content are the body. Order: broadest (incl. title) first.
     article: [
+      '[data-testid="twitterArticleReadView"]',
       '[data-testid="twitterArticleRichTextView"]',
-      '[data-testid="longformRichTextRenderer"]',
-      '[data-testid="twitterArticleReader"]',
+      '[data-testid="longformRichTextComponent"]',
     ],
     // primary content column — used to also pick up the article title (an <h1>)
     primaryColumn: ['[data-testid="primaryColumn"]'],
