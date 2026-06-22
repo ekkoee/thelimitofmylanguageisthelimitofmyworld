@@ -1,18 +1,15 @@
 import { AlignedPair, Settings, TranslateResponse } from '../core/types';
 import { hasTranslatableText } from '../core/segmentation';
 import { el, isProcessed, markProcessed } from '../utils/dom';
+import { sendMessage, isContextGoneError } from '../utils/runtime';
 
 export interface TextUnit { source: HTMLElement; text: string; }
 export interface SiteAdapter { id: string; collect(): TextUnit[]; }
 
-function translateBlock(text: string): Promise<AlignedPair[]> {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ type: 'translate', text }, (resp: TranslateResponse) => {
-      if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
-      if (!resp?.ok) return reject(new Error(resp?.error || 'translate failed'));
-      resolve(resp.pairs || []);
-    });
-  });
+async function translateBlock(text: string): Promise<AlignedPair[]> {
+  const resp = await sendMessage<TranslateResponse>({ type: 'translate', text });
+  if (!resp?.ok) throw new Error(resp?.error || 'translate failed');
+  return resp.pairs || [];
 }
 
 function fillPairs(block: HTMLElement, pairs: AlignedPair[]): void {
@@ -24,6 +21,14 @@ function fillPairs(block: HTMLElement, pairs: AlignedPair[]): void {
   for (const p of pairs) {
     block.appendChild(el('div', 'ibt-trans', p.t));
   }
+}
+
+// Shown when the extension context is gone (reload/update): a refresh reloads
+// the fresh content script and translation resumes.
+function showReloadHint(block: HTMLElement): void {
+  block.className = 'ibt-block';
+  block.textContent = '';
+  block.appendChild(el('span', 'ibt-error-msg', '擴充功能已更新，請重新整理此頁面以繼續翻譯。'));
 }
 
 function showError(block: HTMLElement, message: string, retry: () => void): void {
@@ -71,6 +76,8 @@ export function renderTranslationAfter(anchor: Node, text: string): HTMLElement 
       const pairs = await translateBlock(text);
       fillPairs(block, pairs);
     } catch (err: any) {
+      // Extension was reloaded/updated → quiet "refresh" hint, no retry spam.
+      if (isContextGoneError(err)) { showReloadHint(block); return; }
       showError(block, String(err?.message ?? err), run);
     }
   };

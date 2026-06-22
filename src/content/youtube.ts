@@ -2,6 +2,7 @@ import { AlignedPair, Settings, TranslateBatchResponse, TranslateResponse } from
 import { SELECTORS, queryFirst } from './selectors';
 import { onUrlChange } from '../utils/observer';
 import { el } from '../utils/dom';
+import { extensionAlive, isContextGoneError, sendMessage } from '../utils/runtime';
 
 const ROOT_FLAG = 'data-ibt-yt';
 const SETTLE_MS = 180;
@@ -144,6 +145,9 @@ class TrackCaptions {
   private video(): HTMLVideoElement | null { return this.player.querySelector('video'); }
 
   private loop = (): void => {
+    // Extension reloaded/updated → this content script is dead. Stop the loop
+    // (don't reschedule) and tear down, so we don't spam sendMessage failures.
+    if (!extensionAlive()) { this.destroy(); return; }
     this.raf = requestAnimationFrame(this.loop);
     const s = this.settings;
     if (!s.enabled || !s.sites.youtube) { this.hide(); this.flag(false); return; }
@@ -217,6 +221,7 @@ class TrackCaptions {
         batch.forEach((i, k) => { const t = (arr[k] || '').trim(); if (t) this.trans.set(i, t); });
       })
       .catch((err) => {
+        if (isContextGoneError(err)) return; // extension reloaded → loop will stop itself
         const msg = String(err?.message ?? err);
         const quota = /\b429\b|quota|rate/i.test(msg);
         this.cooldownUntil = Date.now() + (quota ? 60000 : 4000); // quota: wait a minute; other: brief
@@ -301,6 +306,8 @@ class DomCaptions {
   start(): void { this.timer = setInterval(() => this.tick(), POLL_MS) as unknown as number; this.tick(); }
 
   private tick(): void {
+    // Extension reloaded/updated → stop polling cleanly.
+    if (!extensionAlive()) { this.removeLine(); if (this.timer) clearInterval(this.timer); return; }
     const p = this.player;
     const s = this.settings;
     if (!s.enabled || !s.sites.youtube) { this.removeLine(); return; }
@@ -368,24 +375,16 @@ class DomCaptions {
 }
 
 // ---- helpers ----
-function translateBlock(text: string): Promise<AlignedPair[]> {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ type: 'translate', text }, (resp: TranslateResponse) => {
-      if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
-      if (!resp?.ok) return reject(new Error(resp?.error || 'failed'));
-      resolve(resp.pairs || []);
-    });
-  });
+async function translateBlock(text: string): Promise<AlignedPair[]> {
+  const resp = await sendMessage<TranslateResponse>({ type: 'translate', text });
+  if (!resp?.ok) throw new Error(resp?.error || 'failed');
+  return resp.pairs || [];
 }
 
-function translateBatch(texts: string[]): Promise<string[]> {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ type: 'translateBatch', texts }, (resp: TranslateBatchResponse) => {
-      if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
-      if (!resp?.ok) return reject(new Error(resp?.error || 'failed'));
-      resolve(resp.translations || []);
-    });
-  });
+async function translateBatch(texts: string[]): Promise<string[]> {
+  const resp = await sendMessage<TranslateBatchResponse>({ type: 'translateBatch', texts });
+  if (!resp?.ok) throw new Error(resp?.error || 'failed');
+  return resp.translations || [];
 }
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
