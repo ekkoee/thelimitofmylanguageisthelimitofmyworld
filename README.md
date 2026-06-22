@@ -21,19 +21,24 @@
 
 ## 🚀 安裝
 
-### A. 從原始碼建置(開發者)
+> 目前還在等 Chrome 線上應用程式商店審核,先用下面方式手動安裝。**全程免費、不用註冊、不用填任何 key。**
+
+### A. 一般使用者(推薦,3 分鐘)
+1. 到本專案的 [Releases](../../releases) 下載最新版 zip。
+2. 解壓縮,會得到一個資料夾(裡面有 `manifest.json`)。**不要刪掉或搬走它。**
+3. 開啟 `chrome://extensions`,打開右上角「**開發人員模式 / Developer mode**」。
+4. 點「**載入未封裝項目 / Load unpacked**」→ 選**剛剛解壓出來的那個資料夾**。
+
+打開 x.com / reddit.com / youtube.com 就會自動雙語。其他網頁按 `Alt+A` 或點工具列圖示 →「翻譯這個網頁」。
+
+> 💡 Chrome 每次開機可能跳「要停用開發人員模式擴充功能嗎?」,按「**保留 / Keep**」即可(手動安裝的正常現象)。
+
+### B. 從原始碼建置(開發者)
 ```bash
 npm install
 npm run build      # 產生 dist/
 ```
-1. 開啟 `chrome://extensions`
-2. 開啟右上角「**開發人員模式 / Developer mode**」
-3. 「**載入未封裝項目 / Load unpacked**」→ 選 **`dist/`** 資料夾
-
-打開 x.com / reddit.com / youtube.com 就會自動雙語,**不用填任何 key**。
-
-### B. 直接使用(非開發者)
-到本專案的 [Releases](../../releases) 下載最新的 `dist` zip,解壓後依上面步驟 1–3 載入 `dist/` 資料夾即可。
+然後依上面步驟 3–4 載入 **`dist/`** 資料夾。
 
 ---
 
@@ -128,4 +133,4 @@ src/
 
 ## 📄 授權
 
-[MIT](LICENSE) — 自由使用、修改、散布。記得把 `LICENSE` 內的 `YOUR_NAME` 換成你的名字或 GitHub 帳號。
+[MIT](LICENSE) — 自由使用、修改、散布。
