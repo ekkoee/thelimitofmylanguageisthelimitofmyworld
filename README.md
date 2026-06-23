@@ -3,15 +3,18 @@
 > A free, open-source Chrome extension (Manifest V3) for **line-by-line bilingual reading** — original on one line, translation on the next — on X/Twitter, Reddit, YouTube, and any web page. No API key required.
 
 把外文內容變成「**原文一行、中文一行**」的對照閱讀,幫你更快讀懂、順便學語言。
-**完全免費、預設免 API 金鑰、裝上就能用**(使用 Google 免費翻譯端點,回傳即為逐句對齊的結果)。想要更高品質可在設定頁改用 OpenAI / Gemini / 本地 Ollama。
+**完全免費、預設免 API 金鑰、裝上就能用**:內建**兩個免費引擎**(Google,偶爾被限流時自動切換 Microsoft),並**自動偵測任何來源語言**(英文、日文、韓文…皆可)翻成中文。想要更高品質可在設定頁改用 Gemini / OpenAI / 本地 Ollama。
 
 ---
 
 ## ✨ 功能特色
 
+- **多語言來源**:自動偵測英文、日文、韓文…等任何來源語言並翻成中文。
+- **兩個免費引擎**:預設 Google 免費端點,偶爾被限流時自動切換到 Microsoft 免費端點,翻譯不中斷(皆免金鑰)。
 - **X / Twitter、Reddit**:開啟後自動以雙語顯示,逐行對照。
 - **YouTube**:電影模式雙語字幕——攔截原字幕、合併成自然句子、跟著聲音一句一句出現,中文在上、英文在下(可調整)。
-- **任何網頁**:點工具列圖示 →「翻譯這個網頁」,或按 `Alt+A`,一鍵整頁雙語;再操作一次即關閉。
+- **任何網頁**:點工具列圖示 →「翻譯這個網頁」,或按 `Alt+A`,一鍵整頁雙語;再操作一次即關閉。通用版面偵測,連 Facebook 等以 div/span 排版的現代網站也能抓到內文。
+- **雙擊單字浮窗**(選用,預設關閉):任何網頁雙擊單字或反白詞句,就地浮出原文＋🔊 朗讀、翻譯,單字附**字典卡**;開啟時才請求「所有網站」權限,關閉即一併撤除。
 - **顯示 / 隱藏切換**:在 X / Reddit / YouTube 按 `Alt+A`(或按鈕)可隨時隱藏譯文、切回原文。
 - **繁體 / 簡體中文**一鍵切換。
 - **多種譯文樣式**:底線、虛線、波浪線、框線、醒目提示、斜體、粗體,以及「**學習模式**」(中文先模糊,滑過才顯示,逼自己先讀原文)。
@@ -71,9 +74,11 @@ npm run build      # 產生 dist/
 | 權限 | 用途 |
 |---|---|
 | `storage` | 儲存設定、金鑰、翻譯快取於本機。 |
-| `activeTab` + `scripting` | 按 `Alt+A`／按鈕時,**僅暫時**存取當前分頁以插入譯文,不需要「所有網站」權限。 |
+| `activeTab` + `scripting` | 按 `Alt+A`／按鈕時,**僅暫時**存取當前分頁以插入譯文。預設安裝不要求「所有網站」權限。 |
+| 選用 `<all_urls>`(預設關閉) | 僅當你開啟「雙擊單字浮窗」時於點擊當下請求,用於在任意網頁顯示浮窗;關閉功能即撤除。 |
 | 主機權限:`x.com` / `twitter.com` / `reddit.com` / `youtube.com` | 在這四個網站自動顯示雙語。 |
-| 主機權限:翻譯端點(`translate.googleapis.com` 等) | 把選取文字送往你所選的翻譯服務取得譯文。 |
+| 主機權限:`translate.googleapis.com`(Google 免費)、`edge.microsoft.com` ＋ `api-edge.cognitive.microsofttranslator.com`(Microsoft 免費後備) | 預設免費引擎,傳送選取文字取得譯文。 |
+| 主機權限:`generativelanguage.googleapis.com`、`api.openai.com`、`localhost`／`127.0.0.1` | 選用引擎(Gemini／OpenAI 需自備金鑰;Ollama 為本機,資料不離開裝置)。 |
 
 ---
 

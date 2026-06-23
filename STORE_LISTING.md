@@ -1,35 +1,44 @@
-# Chrome Web Store — 上架文案（草稿）
+# Chrome Web Store — 上架文案
+
+> 與 manifest（v1.1.2）一致的商店文案。完整送審資料包（含可公開的隱私權政策全文、逐項權限理由、上架步驟）另行維護，本檔為精簡對照版。
 
 ## 名稱
-Immersive Bilingual — X / Reddit / YouTube 雙語
+雙語對照翻譯 — 網頁與 YouTube 字幕
 
 ## 簡短說明（≤132 字元）
-原文一行、中文一行的沉浸式雙語顯示。支援 X/Twitter、Reddit 貼文留言與 YouTube 字幕，深色模式友善。
+免費網頁雙語對照：原文一行、譯文一行。任何網頁按 Alt+A，X、Reddit 自動翻譯，還有 YouTube 雙語字幕。兩個免費引擎、免 API 金鑰，繁簡皆可。
 
 ## 詳細說明
-把英文內容直接變成雙語閱讀，不必跳到別的分頁、也不是把整段塞到頁尾。
+把任何外文內容變成「原文一行、中文一行」的對照閱讀，幫你更快讀懂、順便學語言。完全免費、預設免 API 金鑰，自動偵測任何來源語言（英文、日文、韓文…皆可）。
 
-• X / Twitter：推文、回覆、引用、個人簡介
-• Reddit：貼文標題、內文、留言
-• YouTube：影片字幕即時雙語疊加
+■ 主要功能
+• 任何網頁：點工具列圖示 →「翻譯這個網頁」，或按 Alt+A，一鍵整頁雙語；再操作一次即關閉。採用通用版面偵測，連 Facebook 等以 div/span 排版的現代網站也能抓到內文。
+• X / Twitter、Reddit：開啟後自動雙語顯示；按 Alt+A（或按鈕）可隨時隱藏／顯示翻譯、切回原文。
+• YouTube：影片字幕雙語對照，像電影字幕一樣一句一句跟著聲音，中文在上、英文在下（可調整）；按 Alt+A 可切回原本字幕。
+• 雙擊單字浮窗（選用，預設關閉）：在任何網頁雙擊單字或反白詞句，就地浮出原文＋🔊 朗讀、翻譯，單字還附字典卡。此功能開啟時才會請求「在所有網站執行」權限，關閉即一併撤除。
+• 繁體 / 簡體中文一鍵切換；多種譯文樣式（底線、框線、醒目、斜體、粗體、學習模式）；可自訂顏色與字體大小。
 
-特色
-• 逐句對齊 — 每句英文對每句中文，閱讀節奏自然
-• 顯示模式可切換：雙語對照 / 只中文 / 只英文
-• 排列可切換：英文在上或中文在上
-• 自備引擎：OpenAI、Gemini，或用 Ollama 跑本地模型
-• 內建快取與佇列，控制 API 成本；可設定「只翻可見內容」
-• 深色模式友善、字體大小可調
+■ 翻譯引擎（永遠免費）
+• 預設使用免費引擎，零設定、免金鑰即可使用。
+• 內建兩個免費引擎：當 Google 免費端點偶爾被限流時，會自動改用 Microsoft 免費端點，讓翻譯不中斷。
+• 進階（皆為選用）：可自行填入 Gemini / OpenAI 金鑰，或連接你本機的 Ollama，獲得更高品質或完全本地的翻譯。
 
-你的 API key 只存在本機瀏覽器，不會上傳到我們的伺服器。
+■ 隱私
+• 不追蹤、不投放廣告、不販售資料。設定與金鑰只存在你的瀏覽器本機。
+• 只有在你按下翻譯時，才會把該段文字送到你選擇的翻譯服務以取得譯文。
 
 ## 權限說明（提供給審查與使用者）
-• storage：儲存你的設定與翻譯快取（本機）。
-• host：x.com / twitter.com / reddit.com / youtube.com — 在這些頁面插入雙語內容。
-• host：api.openai.com / generativelanguage.googleapis.com / localhost —
-  依你所選的引擎，將要翻譯的文字送往你自己設定的供應商。
+• `storage`：儲存設定、API 金鑰與翻譯快取於本機。
+• `activeTab` + `scripting`：按 Alt+A／工具列按鈕時，僅「暫時」存取當前分頁以插入譯文（預設不需「所有網站」權限）。
+• 選用 `<all_urls>`（預設不啟用）：僅當使用者開啟「雙擊單字浮窗」時，於點擊當下請求；關閉功能即撤除。
+• 主機權限 `x.com` / `twitter.com` / `www.reddit.com` / `www.youtube.com`：在這四個網站自動顯示雙語（內容指令碼）。
+• 主機權限 `translate.googleapis.com`：預設免費引擎，傳送選取文字取得 Google 譯文。
+• 主機權限 `edge.microsoft.com`、`api-edge.cognitive.microsofttranslator.com`：免費後備引擎，向 Microsoft 取得免金鑰授權並傳送選取文字取得譯文（Google 被限流時自動使用）。
+• 主機權限 `generativelanguage.googleapis.com`、`api.openai.com`：選用，使用者自備 Gemini / OpenAI 金鑰時傳送文字。
+• 主機權限 `http://localhost`、`http://127.0.0.1`：選用，連線使用者本機 Ollama；資料不離開使用者電腦。
+
+**單一用途：** 在網頁與 YouTube 上以「原文＋譯文」對照方式顯示文字，協助使用者閱讀與學習外語內容。
+**遠端程式碼：** 否，所有程式碼皆打包於擴充功能內。
 
 ## 隱私
-本擴充不蒐集、不販售個人資料。要翻譯的文字會傳送至你選擇的翻譯供應商
-（OpenAI / Google Gemini / 你本機的 Ollama）以取得翻譯結果。API key 僅儲存於
-你瀏覽器的 chrome.storage，不會傳給開發者。
+本擴充不蒐集、不販售個人資料，無分析或追蹤。要翻譯的文字只在你觸發翻譯時，傳送至你所選擇的翻譯服務以取得譯文：預設 Google 免費端點（`translate.googleapis.com`），限流時自動改用 Microsoft 免費端點（`edge.microsoft.com`、`api-edge.cognitive.microsofttranslator.com`）；選用 Gemini／OpenAI（需自備金鑰）或本機 Ollama（資料不離開裝置）。API 金鑰與設定僅儲存於你瀏覽器的 `chrome.storage`，不會傳給開發者。
