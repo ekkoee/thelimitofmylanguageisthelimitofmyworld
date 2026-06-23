@@ -1,6 +1,6 @@
 {
   "name": "immersive-bilingual",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Free, open-source bilingual reader for X/Twitter, Reddit and YouTube — line-by-line original + translation, plus on-demand whole-page translation.",
   "private": true,
   "type": "module",

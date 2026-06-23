@@ -2,6 +2,21 @@
 
 本專案版本號遵循 [語意化版本](https://semver.org/lang/zh-TW/);格式參考 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)。
 
+## [1.2.0] - 2026-06-23
+
+### 新增 Added
+- 翻譯品質提升:新增頁面上下文感知,專有名詞與產品名翻譯更準確。
+- Twitter/X 推文改為段落分組翻譯,跨行語意更連貫。
+
+### 變更 Changed
+- LLM 引擎(Gemini/OpenAI/Ollama)依場景分用散文/字幕語氣。
+
+### 修正 Fixed
+- 改善 Reddit 長篇貼文對照穩定度(修正偶發重複),網址不再被當作譯文。
+
+### 隱私 Privacy
+- 本次無新增權限、無新增資料蒐集。
+
 ## [1.1.2] - 2026-06-22
 
 ### 新增 Added
